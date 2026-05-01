@@ -1,7 +1,7 @@
 [project]
 name            = "show-and-tell"
 version         = "0.1.0"
-description     = "Add your description here"
+description     = "Academic project for experimenting with Show and Tell image captioning model"
 readme          = "README.md"
 requires-python = ">=3.12"
 dependencies    = [  ]
