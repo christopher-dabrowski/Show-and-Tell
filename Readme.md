@@ -1,6 +1,8 @@
 # Show and Tell
 
-Projekt akademicki, którego celem jest poznanie algorytmu Show and Tell.  
+[![Pylint](https://github.com/christopher-dabrowski/Show-and-Tell/actions/workflows/pylint.yml/badge.svg)](https://github.com/christopher-dabrowski/Show-and-Tell/actions/workflows/pylint.yml)
+
+Projekt akademicki, którego celem jest poznanie algorytmu Show and Tell.
 Projekt bazuje na pracy [Show and Tell: A Neural Image Caption Generator](https://arxiv.org/pdf/1411.4555.pdf) oraz repozytorium [a-PyTorch-Tutorial-to-Image-Captioning](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Image-Captioning).
 
 ## Algorytm Show and Tell
