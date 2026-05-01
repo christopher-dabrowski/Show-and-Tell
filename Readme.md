@@ -23,9 +23,20 @@ szczególnie wymagające, ponieważ wymaga zarówno rozpoznania obiektów, jak i
 kontekstu. Analiza tego modelu pozwala zrozumieć sposób integracji reprezentacji wizualnych z
 modelami sekwencyjnymi oraz podstawy współczesnych systemów multimodalnych.
 
+## Praca nad projektem
+
+_Jeśli chcesz tylko uruchomić projekt przejdź do sekcji [Uruchomienie projektu](#uruchomienie-projektu)._
+
+Do łatwego zainstalowania używanych narzędzi CLI został wykorzystany program [mise](https://mise.jdx.dev/).
+
+1. Zainstaluj `mise` zgodnie z [instrukcjami](https://mise.jdx.dev/getting-started.html).
+2. Zainstaluj narzędzia CLI, uruchamiając `mise install`.
+3. Opcjonalnie skonfiguruj automatyczne dodanie narzędzi zainstalowanych przez `mise` do PATH zgodnie z [instrukcją](https://mise.jdx.dev/getting-started.html#activate-mise).
+4. Zainstaluj zależności łącznie z deweloperskimi `uv sync --all-extras`.
+
 ## Uruchomienie projektu
 
 Do zarządzania wersją python oraz pakietami użyte zostało narzędzie [uv](https://docs.astral.sh/uv/). Jest napisane w Rust i jest znacznie szybsze od pozostałych opcji 😎
 
-1. Zainstaluj `uv` zgodnie z [instrukcjami na stronie projektu](https://docs.astral.sh/uv/getting-started/installation/).
+1. Zainstaluj `uv` zgodnie z [instrukcjami na stronie projektu](https://docs.astral.sh/uv/getting-started/installation/) (jeśli nie zainstalowałeś go wcześnie za pomocą `mise`).
 2. Uruchom `uv sync` w katalogu projektu, aby zainstalować zależności i utworzyć środowisko wirtualne.
