@@ -18,3 +18,10 @@ analizę obrazu i przetwarzanie języka naturalnego. Zadanie generowania opisów
 szczególnie wymagające, ponieważ wymaga zarówno rozpoznania obiektów, jak i zrozumienia ich
 kontekstu. Analiza tego modelu pozwala zrozumieć sposób integracji reprezentacji wizualnych z
 modelami sekwencyjnymi oraz podstawy współczesnych systemów multimodalnych.
+
+## Uruchomienie projektu
+
+Do zarządzania wersją python oraz pakietami użyte zostało narzędzie [uv](https://docs.astral.sh/uv/). Jest napisane w Rust i jest znacznie szybsze od pozostałych opcji 😎
+
+1. Zainstaluj `uv` zgodnie z [instrukcjami na stronie projektu](https://docs.astral.sh/uv/getting-started/installation/).
+2. Uruchom `uv sync` w katalogu projektu, aby zainstalować zależności i utworzyć środowisko wirtualne.
