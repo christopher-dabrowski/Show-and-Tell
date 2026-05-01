@@ -2,6 +2,7 @@
 
 [![Pylint](https://github.com/christopher-dabrowski/Show-and-Tell/actions/workflows/pylint.yml/badge.svg)](https://github.com/christopher-dabrowski/Show-and-Tell/actions/workflows/pylint.yml)
 
+![GitHub commit activity](https://img.shields.io/github/commit-activity/t/christopher-dabrowski/Show-and-Tell?style=for-the-badge&color=green)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fchristopher-dabrowski%2FShow-and-Tell%2Frefs%2Fheads%2Fmaster%2Fpyproject.toml&style=for-the-badge&logo=python)
 
 Projekt akademicki, którego celem jest poznanie algorytmu Show and Tell.
