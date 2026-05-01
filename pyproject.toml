@@ -4,4 +4,11 @@ version         = "0.1.0"
 description     = "Academic project for experimenting with Show and Tell image captioning model"
 readme          = "README.md"
 requires-python = ">=3.12"
-dependencies    = [  ]
+dependencies    = [
+  "numpy>=2.4.4",
+  "pillow>=12.2.0",
+  "scikit-image>=0.26.0",
+  "scipy>=1.17.1",
+  "torch==2.2.2",
+  "torchvision>=0.17.2",
+]
