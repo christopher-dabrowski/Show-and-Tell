@@ -33,6 +33,7 @@ Do łatwego zainstalowania używanych narzędzi CLI został wykorzystany program
 2. Zainstaluj narzędzia CLI, uruchamiając `mise install`.
 3. Opcjonalnie skonfiguruj automatyczne dodanie narzędzi zainstalowanych przez `mise` do PATH zgodnie z [instrukcją](https://mise.jdx.dev/getting-started.html#activate-mise).
 4. Zainstaluj zależności łącznie z deweloperskimi `uv sync --all-extras`.
+5. Zainstaluj hooki git uruchamiając `lefthook install`.
 
 ## Uruchomienie projektu
 
