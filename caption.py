@@ -7,11 +7,13 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import skimage.transform
 import argparse
-from scipy.misc import imread, imresize
+from imageio.v2 import imread
 from PIL import Image
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+def imresize(arr, size):
+    return np.array(Image.fromarray(arr).resize((size[1], size[0])))
 
 def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=3):
     """
@@ -104,7 +106,7 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
             top_k_scores, top_k_words = scores.view(-1).topk(k, 0, True, True)  # (s)
 
         # Convert unrolled indices to actual indices of scores
-        prev_word_inds = top_k_words / vocab_size  # (s)
+        prev_word_inds = top_k_words // vocab_size  # (s)
         next_word_inds = top_k_words % vocab_size  # (s)
 
         # Add new words to sequences, alphas
@@ -167,7 +169,7 @@ def visualize_att(image_path, seq, alphas, rev_word_map, smooth=True):
     for t in range(len(words)):
         if t > 50:
             break
-        plt.subplot(np.ceil(len(words) / 5.), 5, t + 1)
+        plt.subplot(int(np.ceil(len(words) / 5.)), 5, t + 1)
 
         plt.text(0, 1, '%s' % (words[t]), color='black', backgroundcolor='white', fontsize=12)
         plt.imshow(image)
@@ -192,27 +194,37 @@ if __name__ == '__main__':
     parser.add_argument('--model', '-m', help='path to model')
     parser.add_argument('--word_map', '-wm', help='path to word map JSON')
     parser.add_argument('--beam_size', '-b', default=5, type=int, help='beam size for beam search')
-    parser.add_argument('--dont_smooth', dest='smooth', action='store_false', help='do not smooth alpha overlay')
+    parser.add_argument('--smooth', '-s', action='store_true', help='smooth alpha overlay')
 
     args = parser.parse_args()
 
-    # Load model
-    checkpoint = torch.load(args.model, map_location=str(device))
-    decoder = checkpoint['decoder']
-    decoder = decoder.to(device)
-    decoder.eval()
-    encoder = checkpoint['encoder']
-    encoder = encoder.to(device)
-    encoder.eval()
+    # Ładowanie checkpointu
+    checkpoint = torch.load(args.model, map_location=str(device), weights_only=False)
+    
+    # Ładowanie mapy słów
+    if args.word_map == args.model:
+        if 'word_map' in checkpoint:
+            word_map = checkpoint['word_map']
+        else:
+            raise KeyError("W modelu nie ma zaszytej mapy słów. Musisz podać ścieżkę do pliku .json przez --word_map")
+    else:
+        with open(args.word_map, 'r') as j:
+            word_map = json.load(j)
 
-    # Load word map (word2ix)
-    with open(args.word_map, 'r') as j:
-        word_map = json.load(j)
     rev_word_map = {v: k for k, v in word_map.items()}  # ix2word
 
-    # Encode, decode with attention and beam search
+    # Ładowanie modeli
+    decoder = checkpoint['decoder']
+    decoder.to(device)
+    decoder.eval()
+
+    encoder = checkpoint['encoder']
+    encoder.to(device)
+    encoder.eval()
+
+    # Encode, decode z atencją
     seq, alphas = caption_image_beam_search(encoder, decoder, args.img, word_map, args.beam_size)
     alphas = torch.FloatTensor(alphas)
 
-    # Visualize caption and attention of best sequence
+    # Wizualizacja
     visualize_att(args.img, seq, alphas, rev_word_map, args.smooth)
