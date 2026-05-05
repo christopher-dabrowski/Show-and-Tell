@@ -34,7 +34,8 @@ Do łatwego zainstalowania używanych narzędzi CLI został wykorzystany program
 2. Zainstaluj narzędzia CLI, uruchamiając `mise install`.
 3. Opcjonalnie skonfiguruj automatyczne dodanie narzędzi zainstalowanych przez `mise` do PATH zgodnie z [instrukcją](https://mise.jdx.dev/getting-started.html#activate-mise).
 4. Zainstaluj zależności łącznie z deweloperskimi `uv sync --all-extras`.
-5. Zainstaluj hooki git uruchamiając `lefthook install`.
+4.1. Jeżeli masz kartę graficzną serii RTX 50xx, zainstaluj odpowiednią wersję PyTorch: `uv pip install --force-reinstall --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128`
+6. Zainstaluj hooki git uruchamiając `lefthook install`.
 
 ## Uruchomienie projektu
 
@@ -42,3 +43,4 @@ Do zarządzania wersją python oraz pakietami użyte zostało narzędzie [uv](ht
 
 1. Zainstaluj `uv` zgodnie z [instrukcjami na stronie projektu](https://docs.astral.sh/uv/getting-started/installation/) (jeśli nie zainstalowałeś go wcześnie za pomocą `mise`).
 2. Uruchom `uv sync` w katalogu projektu, aby zainstalować zależności i utworzyć środowisko wirtualne.
+3.1. Jeżeli masz kartę graficzną serii RTX 50xx, zainstaluj odpowiednią wersję PyTorch: `uv pip install --force-reinstall --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128`
