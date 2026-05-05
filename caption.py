@@ -198,8 +198,60 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Ładowanie checkpointu
-    checkpoint = torch.load(args.model, map_location=str(device), weights_only=False)
+    # Ładowanie checkpointu - preferujemy wczytanie tylko wag aby uniknac problemow z unpicklingiem
+    try:
+        checkpoint = torch.load(args.model, map_location=str(device), weights_only=True)
+    except Exception:
+        # Jeśli wczytanie "weights_only" się nie powiodło (różne wersje torch / zapisane obiekty),
+        # spróbuj ponownie wczytać checkpoint ale tymczasowo podmieniając klasę Adam
+        # na prostą implementację aby uniknąć błędów podczas unpicklingu optimizerów.
+        import importlib
+        import types
+
+        # Prepare a list of targets to patch where Adam/Optimizer classes may be referenced
+        patched = []
+
+        class _DummyOptimizer:
+            def __init__(self, *args, **kwargs):
+                self.param_groups = []
+                self.state = {}
+
+            def __setstate__(self, state):
+                try:
+                    self.__dict__.update(state)
+                except Exception:
+                    pass
+
+        def _safe_set(module, name, new):
+            orig = getattr(module, name, None)
+            setattr(module, name, new)
+            patched.append((module, name, orig))
+
+        try:
+            _torch_optim = importlib.import_module('torch.optim')
+            _safe_set(_torch_optim, 'Adam', _DummyOptimizer)
+            try:
+                _torch_optim_adam = importlib.import_module('torch.optim.adam')
+                _safe_set(_torch_optim_adam, 'Adam', _DummyOptimizer)
+            except Exception:
+                pass
+            try:
+                _torch_optim_optimizer = importlib.import_module('torch.optim.optimizer')
+                _safe_set(_torch_optim_optimizer, 'Optimizer', _DummyOptimizer)
+            except Exception:
+                pass
+
+            checkpoint = torch.load(args.model, map_location=str(device), weights_only=False)
+        finally:
+            # Restore patched attributes
+            for module, name, orig in patched:
+                if orig is None:
+                    try:
+                        delattr(module, name)
+                    except Exception:
+                        pass
+                else:
+                    setattr(module, name, orig)
     
     # Ładowanie mapy słów
     if args.word_map == args.model:
