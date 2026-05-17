@@ -15,13 +15,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def imresize(arr, size):
     return np.array(Image.fromarray(arr).resize((size[1], size[0])))
 
-def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=3):
+def caption_image_beam_search(encoder, decoder, image_input, word_map, beam_size=3):
     """
     Reads an image and captions it with beam search.
 
     :param encoder: encoder model
     :param decoder: decoder model
-    :param image_path: path to image
+    :param image_input: path to image (str) OR in-memory image (PIL.Image / numpy array)
     :param word_map: word map
     :param beam_size: number of sequences to consider at each decode-step
     :return: caption, weights for visualization
@@ -30,15 +30,29 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
     k = beam_size
     vocab_size = len(word_map)
 
-    # Read image and process
-    img = imread(image_path)
+    # --- ZMIANA: Uniwersalne ładowanie obrazu (Dysk lub RAM) ---
+    if isinstance(image_input, str):
+        # 1. Ścieżka do pliku (oryginalne zachowanie)
+        img = imread(image_input)
+    elif isinstance(image_input, Image.Image):
+        # 2. Obiekt PIL Image z pamięci RAM
+        img = np.array(image_input)
+    elif isinstance(image_input, np.ndarray):
+        # 3. Tablica NumPy z pamięci RAM
+        img = image_input
+    else:
+        raise TypeError("image_input musi być ścieżką (str), obiektem PIL Image lub tablicą NumPy.")
+    # -----------------------------------------------------------
+
     if len(img.shape) == 2:
         img = img[:, :, np.newaxis]
         img = np.concatenate([img, img, img], axis=2)
+        
     img = imresize(img, (256, 256))
     img = img.transpose(2, 0, 1)
     img = img / 255.
     img = torch.FloatTensor(img).to(device)
+    
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     transform = transforms.Compose([normalize])
@@ -147,7 +161,6 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
     alphas = complete_seqs_alpha[i]
 
     return seq, alphas
-
 
 def visualize_att(image_path, seq, alphas, rev_word_map, smooth=True):
     """
