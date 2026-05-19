@@ -1,4 +1,5 @@
 import time
+import argparse
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
@@ -38,12 +39,29 @@ fine_tune_encoder = False  # fine-tune encoder?
 checkpoint = None  # path to checkpoint, None if none
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train image captioning model.')
+    parser.add_argument('--data-folder', default=data_folder)
+    parser.add_argument('--data-name', default=data_name)
+    parser.add_argument('--checkpoint', default=None)
+    parser.add_argument('--fine-tune-encoder', action='store_true')
+    parser.add_argument('--epochs', type=int, default=epochs, help='Number of training epochs')
+    return parser.parse_args()
+
+
 def main():
     """
     Training and validation.
     """
 
-    global best_bleu4, epochs_since_improvement, checkpoint, start_epoch, fine_tune_encoder, data_name, word_map
+    global best_bleu4, epochs_since_improvement, checkpoint, start_epoch, fine_tune_encoder, data_name, word_map, data_folder, epochs
+
+    args = parse_args()
+    data_folder = args.data_folder
+    data_name = args.data_name
+    checkpoint = args.checkpoint
+    fine_tune_encoder = args.fine_tune_encoder
+    epochs = args.epochs
 
     # Read word map
     word_map_file = os.path.join(data_folder, 'WORDMAP_' + data_name + '.json')
@@ -176,8 +194,22 @@ def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_
 
         # Remove timesteps that we didn't decode at, or are pads
         # pack_padded_sequence is an easy trick to do this
-        scores, _ = pack_padded_sequence(scores, decode_lengths, batch_first=True)
-        targets, _ = pack_padded_sequence(targets, decode_lengths, batch_first=True)
+        packed_scores = pack_padded_sequence(scores, decode_lengths, batch_first=True)
+        if isinstance(packed_scores, (tuple, list)):
+            # pack_padded_sequence may return multiple items in some versions; first element is the packed data
+            scores = packed_scores[0]
+        elif hasattr(packed_scores, 'data'):
+            scores = packed_scores.data
+        else:
+            scores = packed_scores
+
+        packed_targets = pack_padded_sequence(targets, decode_lengths, batch_first=True)
+        if isinstance(packed_targets, (tuple, list)):
+            targets = packed_targets[0]
+        elif hasattr(packed_targets, 'data'):
+            targets = packed_targets.data
+        else:
+            targets = packed_targets
 
         # Calculate loss
         loss = criterion(scores, targets)
@@ -267,8 +299,21 @@ def validate(val_loader, encoder, decoder, criterion):
             # Remove timesteps that we didn't decode at, or are pads
             # pack_padded_sequence is an easy trick to do this
             scores_copy = scores.clone()
-            scores, _ = pack_padded_sequence(scores, decode_lengths, batch_first=True)
-            targets, _ = pack_padded_sequence(targets, decode_lengths, batch_first=True)
+            packed_scores = pack_padded_sequence(scores, decode_lengths, batch_first=True)
+            if isinstance(packed_scores, (tuple, list)):
+                scores = packed_scores[0]
+            elif hasattr(packed_scores, 'data'):
+                scores = packed_scores.data
+            else:
+                scores = packed_scores
+
+            packed_targets = pack_padded_sequence(targets, decode_lengths, batch_first=True)
+            if isinstance(packed_targets, (tuple, list)):
+                targets = packed_targets[0]
+            elif hasattr(packed_targets, 'data'):
+                targets = packed_targets.data
+            else:
+                targets = packed_targets
 
             # Calculate loss
             loss = criterion(scores, targets)
@@ -296,7 +341,8 @@ def validate(val_loader, encoder, decoder, criterion):
             # references = [[ref1a, ref1b, ref1c], [ref2a, ref2b], ...], hypotheses = [hyp1, hyp2, ...]
 
             # References
-            allcaps = allcaps[sort_ind]  # because images were sorted in the decoder
+            sort_ind_cpu = sort_ind.cpu() if torch.is_tensor(sort_ind) else sort_ind
+            allcaps = allcaps[sort_ind_cpu]  # because images were sorted in the decoder
             for j in range(allcaps.shape[0]):
                 img_caps = allcaps[j].tolist()
                 img_captions = list(

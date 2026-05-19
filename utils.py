@@ -13,7 +13,7 @@ def imresize(arr, size):
     return np.array(Image.fromarray(arr).resize((size[1], size[0])))
 
 def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_image, min_word_freq, output_folder,
-                       max_len=100):
+                       max_len=100, subset_ratio=1.0):
     """
     Creates input files for training, validation, and test data.
 
@@ -24,6 +24,7 @@ def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_i
     :param min_word_freq: words occuring less frequently than this threshold are binned as <unk>s
     :param output_folder: folder to save files
     :param max_len: don't sample captions longer than this length
+    :param subset_ratio: fraction of training data to use (0.0-1.0), default 1.0 uses all data
     """
 
     assert dataset in {'coco', 'flickr8k', 'flickr30k'}
@@ -69,6 +70,13 @@ def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_i
     assert len(train_image_paths) == len(train_image_captions)
     assert len(val_image_paths) == len(val_image_captions)
     assert len(test_image_paths) == len(test_image_captions)
+
+    # Apply subset ratio to training data if specified
+    if subset_ratio < 1.0:
+        subset_size = int(len(train_image_paths) * subset_ratio)
+        train_image_paths = train_image_paths[:subset_size]
+        train_image_captions = train_image_captions[:subset_size]
+        print(f"Using subset of training data: {subset_size} / {len(train_image_paths) + len(train_image_paths[subset_size:])} images")
 
     # Create word map
     words = [w for w in word_freq.keys() if word_freq[w] > min_word_freq]
@@ -237,6 +245,24 @@ def save_checkpoint(data_name, epoch, epochs_since_improvement, encoder, decoder
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         torch.save(state, 'BEST_' + filename)
+    # Also save a portable checkpoint containing only state_dicts (safer for future loading)
+    try:
+        sd_state = {
+            'epoch': epoch,
+            'epochs_since_improvement': epochs_since_improvement,
+            'bleu-4': bleu4,
+            'encoder_state_dict': encoder.state_dict() if encoder is not None else None,
+            'decoder_state_dict': decoder.state_dict() if decoder is not None else None,
+            'encoder_optimizer_state_dict': encoder_optimizer.state_dict() if encoder_optimizer is not None else None,
+            'decoder_optimizer_state_dict': decoder_optimizer.state_dict() if decoder_optimizer is not None else None,
+        }
+        sd_filename = 'checkpoint_' + data_name + '_state_dict.pth.tar'
+        torch.save(sd_state, sd_filename)
+        if is_best:
+            torch.save(sd_state, 'BEST_' + sd_filename)
+    except Exception:
+        # If for any reason creating state_dict checkpoint fails, do not break training
+        pass
 
 
 class AverageMeter(object):
