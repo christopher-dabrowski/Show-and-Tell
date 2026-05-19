@@ -44,3 +44,22 @@ Do zarządzania wersją python oraz pakietami użyte zostało narzędzie [uv](ht
 1. Zainstaluj `uv` zgodnie z [instrukcjami na stronie projektu](https://docs.astral.sh/uv/getting-started/installation/) (jeśli nie zainstalowałeś go wcześnie za pomocą `mise`).
 2. Uruchom `uv sync` w katalogu projektu, aby zainstalować zależności i utworzyć środowisko wirtualne.
 3.1. Jeżeli masz kartę graficzną serii RTX 50xx, zainstaluj odpowiednią wersję PyTorch: `uv pip install --force-reinstall --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128`
+
+## Eksperyment ze słownikiem
+
+Aby porównać wpływ `min_word_freq` na jakość opisów, wygeneruj osobne zbiory danych dla kilku progów:
+
+```bash
+python create_input_files.py --min-word-freq 10
+python create_input_files.py --min-word-freq 50
+python create_input_files.py --min-word-freq 100
+```
+
+Następnie wytrenuj osobny model dla każdej wersji danych, podając zgodny `--data-name` w `train.py` i `eval.py`, np. dla `min_word_freq=10`:
+
+```bash
+python train.py --data-name coco_5_cap_per_img_10_min_word_freq
+python eval.py --data-name coco_5_cap_per_img_10_min_word_freq --checkpoint PATH_TO_CHECKPOINT --word-map-file PATH_TO_WORDMAP
+```
+
+Analogicznie wykonaj trening i ewaluację dla `50` oraz `100`.

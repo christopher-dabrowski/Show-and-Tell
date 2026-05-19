@@ -1,12 +1,14 @@
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
+import argparse
 import torchvision.transforms as transforms
 from datasets import *
 from utils import *
 from nltk.translate.bleu_score import corpus_bleu
 import torch.nn.functional as F
 from tqdm import tqdm
+from models import Encoder, DecoderWithAttention
 
 # Parameters
 data_folder = '/media/ssd/caption data'  # folder with data files saved by create_input_files.py
@@ -16,20 +18,14 @@ word_map_file = '/media/ssd/caption data/WORDMAP_coco_5_cap_per_img_5_min_word_f
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # sets device for model and PyTorch tensors
 cudnn.benchmark = True  # set to true only if inputs to model are fixed size; otherwise lot of computational overhead
 
-# Load model
-checkpoint = torch.load(checkpoint)
-decoder = checkpoint['decoder']
-decoder = decoder.to(device)
-decoder.eval()
-encoder = checkpoint['encoder']
-encoder = encoder.to(device)
-encoder.eval()
 
-# Load word map (word2ix)
-with open(word_map_file, 'r') as j:
-    word_map = json.load(j)
-rev_word_map = {v: k for k, v in word_map.items()}
-vocab_size = len(word_map)
+def parse_args():
+    parser = argparse.ArgumentParser(description='Evaluate image captioning model.')
+    parser.add_argument('--data-folder', default=data_folder)
+    parser.add_argument('--data-name', default=data_name)
+    parser.add_argument('--checkpoint', default=checkpoint)
+    parser.add_argument('--word-map-file', default=word_map_file)
+    return parser.parse_args()
 
 # Normalization transform
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -121,7 +117,7 @@ def evaluate(beam_size):
                 top_k_scores, top_k_words = scores.view(-1).topk(k, 0, True, True)  # (s)
 
             # Convert unrolled indices to actual indices of scores
-            prev_word_inds = top_k_words / vocab_size  # (s)
+            prev_word_inds = top_k_words // vocab_size  # (s)
             next_word_inds = top_k_words % vocab_size  # (s)
 
             # Add new words to sequences
@@ -175,5 +171,49 @@ def evaluate(beam_size):
 
 
 if __name__ == '__main__':
+    args = parse_args()
+    data_folder = args.data_folder
+    data_name = args.data_name
+    checkpoint_path = args.checkpoint
+    word_map_file = args.word_map_file
+
+    # Load word map (word2ix)
+    with open(word_map_file, 'r') as j:
+        word_map = json.load(j)
+    rev_word_map = {v: k for k, v in word_map.items()}
+    vocab_size = len(word_map)
+
+    # Load model, supporting both legacy full checkpoints and portable state_dict checkpoints
+    checkpoint = None
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location=str(device), weights_only=True)
+    except Exception:
+        try:
+            checkpoint = torch.load(checkpoint_path, map_location=str(device), weights_only=False)
+        except Exception:
+            checkpoint = torch.load(checkpoint_path, map_location=str(device))
+
+    if isinstance(checkpoint, dict) and 'encoder_state_dict' in checkpoint and 'decoder_state_dict' in checkpoint:
+        encoder = Encoder()
+        encoder.load_state_dict(checkpoint['encoder_state_dict'], strict=False)
+        encoder = encoder.to(device)
+        encoder.eval()
+
+        decoder = DecoderWithAttention(attention_dim=512,
+                                       embed_dim=512,
+                                       decoder_dim=512,
+                                       vocab_size=vocab_size,
+                                       dropout=0.5)
+        decoder.load_state_dict(checkpoint['decoder_state_dict'], strict=False)
+        decoder = decoder.to(device)
+        decoder.eval()
+    else:
+        decoder = checkpoint['decoder']
+        decoder = decoder.to(device)
+        decoder.eval()
+        encoder = checkpoint['encoder']
+        encoder = encoder.to(device)
+        encoder.eval()
+
     beam_size = 1
     print("\nBLEU-4 score @ beam size of %d is %.4f." % (beam_size, evaluate(beam_size)))
