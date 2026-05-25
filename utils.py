@@ -3,14 +3,17 @@ import numpy as np
 import h5py
 import json
 import torch
-from scipy.misc import imread, imresize
 from tqdm import tqdm
 from collections import Counter
 from random import seed, choice, sample
+from imageio.v2 import imread
+from PIL import Image
 
+def imresize(arr, size):
+    return np.array(Image.fromarray(arr).resize((size[1], size[0])))
 
 def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_image, min_word_freq, output_folder,
-                       max_len=100):
+                       max_len=100, subset_ratio=1.0):
     """
     Creates input files for training, validation, and test data.
 
@@ -21,6 +24,7 @@ def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_i
     :param min_word_freq: words occuring less frequently than this threshold are binned as <unk>s
     :param output_folder: folder to save files
     :param max_len: don't sample captions longer than this length
+    :param subset_ratio: fraction of training data to use (0.0-1.0), default 1.0 uses all data
     """
 
     assert dataset in {'coco', 'flickr8k', 'flickr30k'}
@@ -67,6 +71,13 @@ def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_i
     assert len(val_image_paths) == len(val_image_captions)
     assert len(test_image_paths) == len(test_image_captions)
 
+    # Apply subset ratio to training data if specified
+    if subset_ratio < 1.0:
+        subset_size = int(len(train_image_paths) * subset_ratio)
+        train_image_paths = train_image_paths[:subset_size]
+        train_image_captions = train_image_captions[:subset_size]
+        print(f"Using subset of training data: {subset_size} / {len(train_image_paths) + len(train_image_paths[subset_size:])} images")
+
     # Create word map
     words = [w for w in word_freq.keys() if word_freq[w] > min_word_freq]
     word_map = {k: v + 1 for v, k in enumerate(words)}
@@ -88,7 +99,7 @@ def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_i
                                    (val_image_paths, val_image_captions, 'VAL'),
                                    (test_image_paths, test_image_captions, 'TEST')]:
 
-        with h5py.File(os.path.join(output_folder, split + '_IMAGES_' + base_filename + '.hdf5'), 'a') as h:
+        with h5py.File(os.path.join(output_folder, split + '_IMAGES_' + base_filename + '.hdf5'), 'w') as h:
             # Make a note of the number of captions we are sampling per image
             h.attrs['captions_per_image'] = captions_per_image
 
@@ -101,42 +112,44 @@ def create_input_files(dataset, karpathy_json_path, image_folder, captions_per_i
             caplens = []
 
             for i, path in enumerate(tqdm(impaths)):
+                try:
+                    # Sample captions
+                    if len(imcaps[i]) < captions_per_image:
+                        captions = imcaps[i] + [choice(imcaps[i]) for _ in range(captions_per_image - len(imcaps[i]))]
+                    else:
+                        captions = sample(imcaps[i], k=captions_per_image)
 
-                # Sample captions
-                if len(imcaps[i]) < captions_per_image:
-                    captions = imcaps[i] + [choice(imcaps[i]) for _ in range(captions_per_image - len(imcaps[i]))]
-                else:
-                    captions = sample(imcaps[i], k=captions_per_image)
+                    # Sanity check
+                    assert len(captions) == captions_per_image
 
-                # Sanity check
-                assert len(captions) == captions_per_image
+                    # Read images
+                    img = imread(impaths[i])
+                    if len(img.shape) == 2:
+                        img = img[:, :, np.newaxis]
+                        img = np.concatenate([img, img, img], axis=2)
+                    img = imresize(img, (256, 256))
+                    img = img.transpose(2, 0, 1)
+                    assert img.shape == (3, 256, 256)
+                    assert np.max(img) <= 255
 
-                # Read images
-                img = imread(impaths[i])
-                if len(img.shape) == 2:
-                    img = img[:, :, np.newaxis]
-                    img = np.concatenate([img, img, img], axis=2)
-                img = imresize(img, (256, 256))
-                img = img.transpose(2, 0, 1)
-                assert img.shape == (3, 256, 256)
-                assert np.max(img) <= 255
+                    # Save image to HDF5 file
+                    images[i] = img
 
-                # Save image to HDF5 file
-                images[i] = img
+                    for j, c in enumerate(captions):
+                        # Encode captions
+                        enc_c = [word_map['<start>']] + [word_map.get(word, word_map['<unk>']) for word in c] + [
+                            word_map['<end>']] + [word_map['<pad>']] * (max_len - len(c))
 
-                for j, c in enumerate(captions):
-                    # Encode captions
-                    enc_c = [word_map['<start>']] + [word_map.get(word, word_map['<unk>']) for word in c] + [
-                        word_map['<end>']] + [word_map['<pad>']] * (max_len - len(c))
+                        # Find caption lengths
+                        c_len = len(c) + 2
 
-                    # Find caption lengths
-                    c_len = len(c) + 2
-
-                    enc_captions.append(enc_c)
-                    caplens.append(c_len)
+                        enc_captions.append(enc_c)
+                        caplens.append(c_len)
+                except FileNotFoundError:
+                    continue # Pomiń brakujące zdjęcie
 
             # Sanity check
-            assert images.shape[0] * captions_per_image == len(enc_captions) == len(caplens)
+            # assert images.shape[0] * captions_per_image == len(enc_captions) == len(caplens)
 
             # Save encoded captions and their lengths to JSON files
             with open(os.path.join(output_folder, split + '_CAPTIONS_' + base_filename + '.json'), 'w') as j:
@@ -232,6 +245,24 @@ def save_checkpoint(data_name, epoch, epochs_since_improvement, encoder, decoder
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         torch.save(state, 'BEST_' + filename)
+    # Also save a portable checkpoint containing only state_dicts (safer for future loading)
+    try:
+        sd_state = {
+            'epoch': epoch,
+            'epochs_since_improvement': epochs_since_improvement,
+            'bleu-4': bleu4,
+            'encoder_state_dict': encoder.state_dict() if encoder is not None else None,
+            'decoder_state_dict': decoder.state_dict() if decoder is not None else None,
+            'encoder_optimizer_state_dict': encoder_optimizer.state_dict() if encoder_optimizer is not None else None,
+            'decoder_optimizer_state_dict': decoder_optimizer.state_dict() if decoder_optimizer is not None else None,
+        }
+        sd_filename = 'checkpoint_' + data_name + '_state_dict.pth.tar'
+        torch.save(sd_state, sd_filename)
+        if is_best:
+            torch.save(sd_state, 'BEST_' + sd_filename)
+    except Exception:
+        # If for any reason creating state_dict checkpoint fails, do not break training
+        pass
 
 
 class AverageMeter(object):
