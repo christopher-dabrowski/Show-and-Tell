@@ -8,6 +8,8 @@
 Projekt akademicki, którego celem jest poznanie algorytmu Show and Tell.
 Projekt bazuje na pracy [Show and Tell: A Neural Image Caption Generator](https://arxiv.org/pdf/1411.4555.pdf) oraz repozytorium [a-PyTorch-Tutorial-to-Image-Captioning](https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Image-Captioning).
 
+Prezentacja działania i opis metody _Show and Tell_ są przedstawione w [ShowAndTell_Demo](ShowAndTell_Demo.ipynb).
+
 ## Algorytm Show and Tell
 
 Model Show and Tell jest jednym z pierwszych skutecznych podejść do automatycznego ge-
@@ -35,7 +37,7 @@ Do łatwego zainstalowania używanych narzędzi CLI został wykorzystany program
 3. Opcjonalnie skonfiguruj automatyczne dodanie narzędzi zainstalowanych przez `mise` do PATH zgodnie z [instrukcją](https://mise.jdx.dev/getting-started.html#activate-mise).
 4. Zainstaluj zależności łącznie z deweloperskimi `uv sync --all-extras`.
 4.1. Jeżeli masz kartę graficzną serii RTX 50xx, zainstaluj odpowiednią wersję PyTorch: `uv pip install --force-reinstall --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128`
-6. Zainstaluj hooki git uruchamiając `lefthook install`.
+5. Zainstaluj hooki git uruchamiając `lefthook install`.
 
 ## Uruchomienie projektu
 
