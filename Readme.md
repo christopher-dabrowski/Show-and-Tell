@@ -45,7 +45,11 @@ Do zarządzania wersją python oraz pakietami użyte zostało narzędzie [uv](ht
 
 1. Zainstaluj `uv` zgodnie z [instrukcjami na stronie projektu](https://docs.astral.sh/uv/getting-started/installation/) (jeśli nie zainstalowałeś go wcześnie za pomocą `mise`).
 2. Uruchom `uv sync` w katalogu projektu, aby zainstalować zależności i utworzyć środowisko wirtualne.
-3.1. Jeżeli masz kartę graficzną serii RTX 50xx, zainstaluj odpowiednią wersję PyTorch: `uv pip install --force-reinstall --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128`
+3. Jeżeli masz kartę graficzną serii RTX 50xx, zainstaluj odpowiednią wersję PyTorch: `uv pip install --force-reinstall --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128`
+4. Pobierz [wagi modelu](https://drive.google.com/open?id=189VY65I_n4RTpQnmLGj7IzVnOF6dmePC) do katalogu `checkpoints/`, jeśli nie chcesz samodzielnie trenować modelu.
+5. Pobierz i rozpakuj przygotowane dane [treningowe](http://images.cocodataset.org/zips/train2014.zip) i [testowe](http://images.cocodataset.org/zips/val2014.zip) do katalogu `dataset/`.
+6. Uruchom `uv run create_input_files.py` żeby wygenerować dane wejściowe dla modelu na podstawie pobranych danych.
+7. Uruchom wybrany Jupyter Notebook korzystając z wirtualnego środowiska python jako kernela.
 
 ## Eksperyment ze słownikiem
 
