@@ -14,19 +14,12 @@ Całość eksperymentów znjduej się w katalogu `eksperymenty`.
 
 ## Algorytm Show and Tell
 
-Model Show and Tell jest jednym z pierwszych skutecznych podejść do automatycznego ge-
-nerowania opisów tekstowych na podstawie obrazów. Architektura łączy sieć konwolucyjną, która
-pełni rolę ekstraktora cech wizualnych, z siecią rekurencyjną odpowiedzialną za generowanie se-
-kwencji słów opisujących obraz. Wektor cech obrazu jest wykorzystywany jako wejście modelu
-językowego, który przewiduje kolejne słowa opisu w sposób sekwencyjny. Dzięki temu możliwe
-jest automatyczne tworzenie zdań opisujących zawartość sceny, obecne obiekty oraz relacje mię-
-dzy nimi. Model został wytrenowany na dużych zbiorach zawierających obrazy wraz z opisami
-tekstowymi, co pozwoliło mu nauczyć się powiązań między reprezentacją wizualną a językiem
-naturalnym. Podejście to zapoczątkowało intensywny rozwój metod multimodalnych łączących
-analizę obrazu i przetwarzanie języka naturalnego. Zadanie generowania opisów obrazów jest
-szczególnie wymagające, ponieważ wymaga zarówno rozpoznania obiektów, jak i zrozumienia ich
-kontekstu. Analiza tego modelu pozwala zrozumieć sposób integracji reprezentacji wizualnych z
-modelami sekwencyjnymi oraz podstawy współczesnych systemów multimodalnych.
+Model Show and Tell jest jednym z pierwszych skutecznych podejść do automatycznego generowania opisów tekstowych na podstawie obrazów. Architektura łączy sieć konwolucyjną, która pełni rolę ekstraktora cech wizualnych, z siecią rekurencyjną odpowiedzialną za generowanie sekwencji słów opisujących obraz.
+Wektor cech obrazu jest wykorzystywany jako wejście modelu językowego, który przewiduje kolejne słowa opisu w sposób sekwencyjny.
+Dzięki temu możliwe jest automatyczne tworzenie zdań opisujących zawartość sceny, obecne obiekty oraz relacje między nimi.
+Model został wytrenowany na dużych zbiorach zawierających obrazy wraz z opisami tekstowymi, co pozwoliło mu nauczyć się powiązań między reprezentacją wizualną a językiem naturalnym.
+Podejście to zapoczątkowało intensywny rozwój metod multimodalnych łączących analizę obrazu i przetwarzanie języka naturalnego. Zadanie generowania opisów obrazów jest szczególnie wymagające, ponieważ wymaga zarówno rozpoznania obiektów, jak i zrozumienia ich kontekstu.
+Analiza tego modelu pozwala zrozumieć sposób integracji reprezentacji wizualnych z modelami sekwencyjnymi oraz podstawy współczesnych systemów multimodalnych.
 
 ## Praca nad projektem
 
