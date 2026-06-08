@@ -21,6 +21,18 @@ Model został wytrenowany na dużych zbiorach zawierających obrazy wraz z opisa
 Podejście to zapoczątkowało intensywny rozwój metod multimodalnych łączących analizę obrazu i przetwarzanie języka naturalnego. Zadanie generowania opisów obrazów jest szczególnie wymagające, ponieważ wymaga zarówno rozpoznania obiektów, jak i zrozumienia ich kontekstu.
 Analiza tego modelu pozwala zrozumieć sposób integracji reprezentacji wizualnych z modelami sekwencyjnymi oraz podstawy współczesnych systemów multimodalnych.
 
+## Struktura repozytorium
+
+- Bazowe pliki tworzące model Show and Tell, takie jak `models.py`, `datasets.py`, `train.py` czy `eval.py` pozwalające na trenowanie i testowanie modelu, są w bazowym katalogu repozytorium.
+- `checkpoints/` zawiera zapisane wagi modelu po treningu. Z uwagi na duży rozmiar pliki te nie są przechowywane w repozytorium.
+- `dataset/` zawiera przygotowane dane treningowe i testowe. Ze względu na duży rozmiar, podobnie jak w przypadku checkpointów, nie są one przechowywane w repozytorium.
+- `eksperymenty/` zawiera notebooki z eksperymentami, w których testowaliśmy różne konfiguracje modelu i analizowaliśmy wyniki.
+- `img/` zawiera obrazy używane w dokumentacji.
+- `.github/workflows/` zawiera konfigurację GitHub Actions do automatycznej walidacji jakości kodu. Kod z wynikiem `pylint` poniżej 7 nie jest akceptowany.
+- `pyproject.toml`, `uv.lock` i `.python-version` zawierają informacje o zależnościach projektu i użytej wersji Python, zarządzane przez `uv`.
+- `.mise.toml` zawiera konfigurację narzędzia `mise`, które jest używane do przygotowania narzędzi deweloperskich, takich jak `uv`.
+- `.lefthook.yaml` zawiera konfigurację narzędzia `lefthook`, które jest używane do walidacji kodu przed każdym commitem.
+
 ## Praca nad projektem
 
 _Jeśli chcesz tylko uruchomić projekt przejdź do sekcji [Uruchomienie projektu](#uruchomienie-projektu)._
